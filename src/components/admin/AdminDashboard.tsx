@@ -10,6 +10,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase";
+import { clearAllSampleData, restoreDefaultSampleData } from "../../data/seedData";
 import {
   UserProfile,
   Department,
@@ -103,6 +104,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeTab, setAc
 
   // Form states
   const [showAddStudentForm, setShowAddStudentForm] = useState(false);
+  const [showAddFacultyForm, setShowAddFacultyForm] = useState(false);
+  const [facultySearchQuery, setFacultySearchQuery] = useState("");
+  const [newFaculty, setNewFaculty] = useState({
+    name: "",
+    employeeId: "",
+    email: "",
+    department: "Computer Science & Engineering",
+    branch: "CSE",
+    phone: "",
+  });
   const [newStudent, setNewStudent] = useState({
     name: "",
     usn: "",
@@ -298,6 +309,68 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeTab, setAc
     }
   };
 
+  // Faculty Handlers
+  const handleCreateFaculty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFaculty.name || !newFaculty.employeeId || !newFaculty.email) {
+      alert("Please fill in Faculty Name, Employee ID, and Email.");
+      return;
+    }
+    const newUid = `fac_${newFaculty.employeeId.toLowerCase().replace(/[^a-z0-9]/g, "")}_${Date.now()}`;
+    await setDoc(doc(db, "users", newUid), {
+      uid: newUid,
+      name: newFaculty.name,
+      employeeId: newFaculty.employeeId.toUpperCase(),
+      email: newFaculty.email,
+      department: newFaculty.department,
+      branch: newFaculty.branch,
+      phone: newFaculty.phone || "+91 98450 00000",
+      role: "faculty",
+      status: "approved",
+      createdAt: new Date().toISOString(),
+    });
+    setNewFaculty({
+      name: "",
+      employeeId: "",
+      email: "",
+      department: "Computer Science & Engineering",
+      branch: "CSE",
+      phone: "",
+    });
+    setShowAddFacultyForm(false);
+    alert(`Faculty member ${newFaculty.name} (${newFaculty.employeeId.toUpperCase()}) added successfully!`);
+  };
+
+  const handleDeleteFaculty = async (uid: string, employeeId: string, name: string) => {
+    if (confirm(`Are you sure you want to delete Faculty member ${name} (${employeeId || "Emp ID"})?`)) {
+      await deleteDoc(doc(db, "users", uid));
+      alert(`Faculty member ${name} removed from college directory.`);
+    }
+  };
+
+  // System Data Reset Handler
+  const handleClearAllSampleData = async () => {
+    if (
+      confirm(
+        "⚠️ DANGER: ARE YOU SURE YOU WANT TO DELETE ALL SAMPLE DETAILS?\n\nThis will remove sample students, sample faculty, timetable slots, notices, attendance logs, marks, and library books so you can build a fresh college portal from scratch!\n\nYour Admin account will be preserved."
+      )
+    ) {
+      const ok = await clearAllSampleData();
+      if (ok) {
+        alert("All sample details have been deleted! You can now enter your official college data.");
+      } else {
+        alert("Failed to clear sample data. Check console logs.");
+      }
+    }
+  };
+
+  const handleRestoreSampleData = async () => {
+    if (confirm("Restore default sample data for demonstration?")) {
+      await restoreDefaultSampleData();
+      alert("Sample data restored successfully!");
+    }
+  };
+
   // Branch Handlers
   const handleAddBranch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,7 +471,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeTab, setAc
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleClearAllSampleData}
+              className="px-3 py-2 rounded-xl bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold shadow-md transition-all flex items-center space-x-1.5"
+              title="Wipe all demo sample data to start fresh for your college"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete Sample Details</span>
+            </button>
+
             <button
               onClick={() =>
                 triggerExport(
@@ -1271,48 +1353,207 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeTab, setAc
         </div>
       )}
 
-      {/* 4. Faculty Directory */}
+      {/* 4. Faculty Directory & Management */}
       {activeTab === "faculty" && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-              <UserCheck className="w-4 h-4 text-[#D4AF37]" /> Faculty Directory
-            </h3>
-            <button
-              onClick={() =>
-                triggerExport(
-                  "Faculty Directory",
-                  facultyList,
-                  [
-                    { key: "employeeId", label: "Emp ID" },
-                    { key: "name", label: "Faculty Name" },
-                    { key: "department", label: "Department" },
-                    { key: "email", label: "Email" },
-                    { key: "phone", label: "Contact Phone" },
-                  ]
-                )
-              }
-              className="px-3 py-1.5 rounded-xl bg-[#002147] text-[#D4AF37] text-xs font-bold border border-[#D4AF37]/30 flex items-center gap-1.5"
-            >
-              <Download className="w-3.5 h-3.5" /> Export Faculty
-            </button>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-[#D4AF37]" /> Faculty Members Directory ({facultyList.length})
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Register new faculty members or remove faculty records from college records.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowAddFacultyForm(!showAddFacultyForm)}
+                className="px-3 py-1.5 rounded-xl bg-[#002147] text-[#D4AF37] font-bold text-xs shadow flex items-center gap-1.5 hover:bg-[#001530] transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{showAddFacultyForm ? "Close Form" : "Add Faculty Member"}</span>
+              </button>
+
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search faculty..."
+                  value={facultySearchQuery}
+                  onChange={(e) => setFacultySearchQuery(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <button
+                onClick={() =>
+                  triggerExport(
+                    "Faculty Directory",
+                    facultyList,
+                    [
+                      { key: "employeeId", label: "Emp ID" },
+                      { key: "name", label: "Faculty Name" },
+                      { key: "department", label: "Department" },
+                      { key: "email", label: "Email" },
+                      { key: "phone", label: "Contact Phone" },
+                    ]
+                  )
+                }
+                className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold border border-gray-200 dark:border-gray-600 flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" /> Export
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {facultyList.map((f) => (
-              <div key={f.uid} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex items-start space-x-3">
-                <div className="w-10 h-10 rounded-full bg-[#002147] text-[#D4AF37] flex items-center justify-center font-bold text-sm shadow">
-                  {f.name.charAt(0)}
-                </div>
+          {/* Add New Faculty Form */}
+          {showAddFacultyForm && (
+            <form
+              onSubmit={handleCreateFaculty}
+              className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3 animate-in fade-in"
+            >
+              <h4 className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                <Plus className="w-4 h-4 text-[#D4AF37]" /> Register New Faculty Member
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <h4 className="text-xs font-bold text-gray-900 dark:text-white">{f.name}</h4>
-                  <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
-                    ID: {f.employeeId} • {f.department}
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-1">{f.email} • {f.phone || "+91 94800 00000"}</p>
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">Faculty Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dr. Rajeshwari V"
+                    value={newFaculty.name}
+                    onChange={(e) => setNewFaculty({ ...newFaculty, name: e.target.value })}
+                    className="w-full p-2 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">Employee / Faculty ID</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. GEC-F-CSE05"
+                    value={newFaculty.employeeId}
+                    onChange={(e) => setNewFaculty({ ...newFaculty, employeeId: e.target.value })}
+                    className="w-full p-2 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white uppercase"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">Official Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. rajeshwari@gecarsikere.ac.in"
+                    value={newFaculty.email}
+                    onChange={(e) => setNewFaculty({ ...newFaculty, email: e.target.value })}
+                    className="w-full p-2 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">Department</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Computer Science & Engineering"
+                    value={newFaculty.department}
+                    onChange={(e) => setNewFaculty({ ...newFaculty, department: e.target.value })}
+                    className="w-full p-2 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">Branch Code</label>
+                  <select
+                    value={newFaculty.branch}
+                    onChange={(e) => setNewFaculty({ ...newFaculty, branch: e.target.value })}
+                    className="w-full p-2 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white"
+                  >
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.code}>{d.code} - {d.name}</option>
+                    ))}
+                    <option value="GEN">GEN - General Sciences</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">Contact Phone</label>
+                  <input
+                    type="text"
+                    placeholder="+91 98450 12345"
+                    value={newFaculty.phone}
+                    onChange={(e) => setNewFaculty({ ...newFaculty, phone: e.target.value })}
+                    className="w-full p-2 text-xs rounded-xl border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-gray-900 dark:text-white"
+                  />
                 </div>
               </div>
-            ))}
+
+              <div className="flex justify-end space-x-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAddFacultyForm(false)}
+                  className="px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-[#002147] text-[#D4AF37] font-bold text-xs rounded-xl shadow"
+                >
+                  Add Faculty Member
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Faculty List Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {facultyList
+              .filter(
+                (f) =>
+                  f.name.toLowerCase().includes(facultySearchQuery.toLowerCase()) ||
+                  f.employeeId?.toLowerCase().includes(facultySearchQuery.toLowerCase()) ||
+                  f.department?.toLowerCase().includes(facultySearchQuery.toLowerCase()) ||
+                  f.email.toLowerCase().includes(facultySearchQuery.toLowerCase())
+              )
+              .map((f) => (
+                <div
+                  key={f.uid}
+                  className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 flex items-start justify-between"
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-[#002147] text-[#D4AF37] flex items-center justify-center font-bold text-sm shadow shrink-0">
+                      {f.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-gray-900 dark:text-white">{f.name}</h4>
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
+                        ID: {f.employeeId || "N/A"} • {f.department || f.branch || "Faculty"}
+                      </p>
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        {f.email} • {f.phone || "+91 94800 00000"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleDeleteFaculty(f.uid, f.employeeId || "", f.name)}
+                    className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-950 rounded-xl transition-colors shrink-0"
+                    title="Delete Faculty Member"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+
+            {facultyList.length === 0 && (
+              <div className="col-span-2 p-8 text-center text-gray-400 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                No faculty members registered. Click <strong>"Add Faculty Member"</strong> to add staff members.
+              </div>
+            )}
           </div>
         </div>
       )}

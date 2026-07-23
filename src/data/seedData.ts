@@ -1,11 +1,59 @@
-import { doc, setDoc, collection, getDocs, writeBatch } from "firebase/firestore";
+import { doc, setDoc, collection, getDocs, writeBatch, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-export async function seedGECArsikereData() {
+export async function clearAllSampleData() {
   try {
+    const collectionsToClear = [
+      "users",
+      "departments",
+      "subjects",
+      "attendance",
+      "marks",
+      "timetable",
+      "assignments",
+      "studyMaterials",
+      "announcements",
+      "academicCalendar",
+      "placementDrives",
+      "libraryBooks"
+    ];
+
+    for (const colName of collectionsToClear) {
+      const snap = await getDocs(collection(db, colName));
+      for (const docSnap of snap.docs) {
+        // Keep the main admin user account so the user stays logged in as Admin
+        if (colName === "users" && docSnap.id === "demo_admin_uid") {
+          continue;
+        }
+        await deleteDoc(docSnap.ref);
+      }
+    }
+
+    localStorage.setItem("gec_sample_data_cleared", "true");
+    console.log("All sample data successfully cleared!");
+    return true;
+  } catch (err) {
+    console.error("Error clearing sample data:", err);
+    return false;
+  }
+}
+
+export async function restoreDefaultSampleData() {
+  localStorage.removeItem("gec_sample_data_cleared");
+  return await seedGECArsikereData(true);
+}
+
+export async function seedGECArsikereData(force: boolean = false) {
+  try {
+    if (!force && localStorage.getItem("gec_sample_data_cleared") === "true") {
+      return true; // User explicitly deleted sample details, do not re-seed!
+    }
+
     const usersSnap = await getDocs(collection(db, "users"));
-    // If users already exist, don't re-seed completely or just update essential missing collections
-    const isAlreadySeeded = !usersSnap.empty;
+    // If users already exist and not forced, don't re-seed
+    if (!force && !usersSnap.empty) {
+      return true;
+    }
 
     const batch = writeBatch(db);
 
