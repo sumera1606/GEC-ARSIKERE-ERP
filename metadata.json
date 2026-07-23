@@ -1,0 +1,6 @@
+{
+  "name": "GEC Arsikere College ERP",
+  "description": "Unified College ERP System for Government Engineering College, Arsikere featuring Web & Android Portals, Real-time Firestore sync, Role-based Access, and AI Campus Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

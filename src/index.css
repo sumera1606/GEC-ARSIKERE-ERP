@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+  .dark .glass-card {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #FFE082 0%, #D4AF37 50%, #B38F24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .navy-mesh-bg {
+    background: radial-gradient(circle at 10% 20%, rgba(0, 33, 71, 1) 0%, rgba(0, 15, 36, 1) 90%);
+  }
+  .glow-box-gold {
+    box-shadow: 0 0 20px -5px rgba(212, 175, 55, 0.35);
+  }
+  .glow-box-blue {
+    box-shadow: 0 0 20px -5px rgba(0, 33, 71, 0.3);
+  }
+}
+
+@keyframes floatSmooth {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes shimmerSlow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float {
+  animation: floatSmooth 4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(212,175,55,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmerSlow 3s infinite;
+}

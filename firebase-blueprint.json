@@ -1,0 +1,160 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "description": "User profiles for Admin, Faculty, and Students",
+      "fields": {
+        "uid": "string",
+        "email": "string",
+        "name": "string",
+        "role": "string",
+        "status": "string",
+        "usn": "string",
+        "employeeId": "string",
+        "department": "string",
+        "branch": "string",
+        "semester": "string",
+        "section": "string",
+        "phone": "string",
+        "createdAt": "string"
+      }
+    },
+    {
+      "name": "departments",
+      "description": "Engineering departments and branches at GEC Arsikere",
+      "fields": {
+        "code": "string",
+        "name": "string",
+        "hodName": "string",
+        "totalFaculty": "number",
+        "totalStudents": "number"
+      }
+    },
+    {
+      "name": "subjects",
+      "description": "Academic subjects offered",
+      "fields": {
+        "code": "string",
+        "name": "string",
+        "branch": "string",
+        "semester": "string",
+        "credits": "number",
+        "facultyName": "string"
+      }
+    },
+    {
+      "name": "attendance",
+      "description": "Daily attendance logs",
+      "fields": {
+        "subjectId": "string",
+        "subjectName": "string",
+        "branch": "string",
+        "semester": "string",
+        "section": "string",
+        "date": "string",
+        "facultyId": "string",
+        "records": "array"
+      }
+    },
+    {
+      "name": "marks",
+      "description": "Internal assessment and exam marks",
+      "fields": {
+        "subjectId": "string",
+        "subjectName": "string",
+        "studentId": "string",
+        "studentName": "string",
+        "usn": "string",
+        "examType": "string",
+        "obtainedMarks": "number",
+        "maxMarks": "number"
+      }
+    },
+    {
+      "name": "timetable",
+      "description": "Weekly class schedule",
+      "fields": {
+        "branch": "string",
+        "semester": "string",
+        "section": "string",
+        "day": "string",
+        "periods": "array"
+      }
+    },
+    {
+      "name": "assignments",
+      "description": "Course assignments",
+      "fields": {
+        "title": "string",
+        "description": "string",
+        "subjectName": "string",
+        "branch": "string",
+        "semester": "string",
+        "dueDate": "string",
+        "totalMarks": "number"
+      }
+    },
+    {
+      "name": "studyMaterials",
+      "description": "Reference materials and drive links",
+      "fields": {
+        "title": "string",
+        "subjectName": "string",
+        "category": "string",
+        "driveUrl": "string"
+      }
+    },
+    {
+      "name": "announcements",
+      "description": "College and department notices",
+      "fields": {
+        "title": "string",
+        "content": "string",
+        "targetAudience": "string",
+        "priority": "string",
+        "createdAt": "string"
+      }
+    },
+    {
+      "name": "academicCalendar",
+      "description": "College events and holidays",
+      "fields": {
+        "title": "string",
+        "date": "string",
+        "type": "string"
+      }
+    },
+    {
+      "name": "leaveApplications",
+      "description": "Student and faculty leave requests",
+      "fields": {
+        "applicantName": "string",
+        "reason": "string",
+        "startDate": "string",
+        "endDate": "string",
+        "status": "string"
+      }
+    },
+    {
+      "name": "placementDrives",
+      "description": "Campus recruitment drives",
+      "fields": {
+        "companyName": "string",
+        "role": "string",
+        "packageLPA": "number",
+        "driveDate": "string",
+        "status": "string"
+      }
+    },
+    {
+      "name": "libraryBooks",
+      "description": "College library catalogue",
+      "fields": {
+        "title": "string",
+        "author": "string",
+        "category": "string",
+        "availableCopies": "number"
+      }
+    }
+  ]
+}
